@@ -1,0 +1,357 @@
+/* ════════════════════════════════════════════════════════════════
+   发现 · 热门景点
+   版式基准：Mindtrip（一排放 3 个，图上压字，卡宽 280 上下）
+   为什么要卡住宽度：高德官方图固定 500px，卡片超过 250px 在 2x 屏上
+   就开始被放大发虚；3 列 × 280px = 840px，刚好 2x 屏不糊。
+   ════════════════════════════════════════════════════════════════ */
+
+.disc-page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 5% 150px;
+}
+
+.disc-head {
+  padding: 44px 0 24px;
+}
+
+.disc-head h1 {
+  margin: 0;
+  font: 600 clamp(23px, 2.3vw, 29px)/1.35 var(--font-display);
+  letter-spacing: -.03em;
+  color: var(--ink);
+}
+
+.disc-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+}
+
+/* ── 卡片 ────────────────────────────────────────── */
+.disc-card {
+  position: relative;
+  display: block;
+  width: 100%;
+  /* 关键：-webkit-box 标题的 min-content 是整串文字，不写 min-width:0
+     卡片就会把 3 列网格撑破，窄屏直接被切掉一列 */
+  min-width: 0;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  aspect-ratio: 4 / 3;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #E7E7EA;
+  cursor: pointer;
+  isolation: isolate;
+  transition: box-shadow .45s var(--ease-out), transform .45s var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.disc-card-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  /* 高德的图新旧混杂、饱和度高，统一压一点饱和 + 提一点反差，
+     整屏看起来才像一套图，而不是从不同年代抠出来的 */
+  filter: saturate(.92) contrast(1.06) brightness(1.01);
+  transition: transform .9s var(--ease-out);
+}
+
+.disc-card-shade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg,
+      rgba(0, 0, 0, 0) 42%,
+      rgba(0, 0, 0, .14) 62%,
+      rgba(0, 0, 0, .74) 100%),
+    linear-gradient(0deg, rgba(20, 24, 32, .10), rgba(20, 24, 32, .10));
+}
+
+.disc-card-body {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: left;
+}
+
+.disc-card-body strong {
+  font: 600 14.5px/1.32 var(--font-display);
+  letter-spacing: -.01em;
+  color: #fff;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, .45);
+  min-width: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.disc-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  font: 400 11px/1.4 var(--font-body);
+  color: rgba(255, 255, 255, .78);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, .5);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.disc-card-meta svg {
+  flex: none;
+  opacity: .85;
+}
+
+.disc-card-meta em {
+  font-style: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.disc-dot {
+  opacity: .55;
+}
+
+.disc-card:hover .disc-card-img,
+.disc-card:focus-visible .disc-card-img {
+  transform: scale(1.045);
+}
+
+.disc-card:hover {
+  box-shadow: 0 14px 30px -16px rgba(0, 0, 0, .45), 0 2px 8px rgba(0, 0, 0, .06);
+}
+
+.disc-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* 骨架：后端还在抓的时候先占住版位，避免加载时页面跳一下 */
+.disc-card-skeleton {
+  background: linear-gradient(100deg, #EDEDF0 20%, #F6F6F8 40%, #EDEDF0 60%);
+  background-size: 220% 100%;
+  animation: disc-shimmer 1.5s linear infinite;
+  cursor: default;
+}
+
+@keyframes disc-shimmer {
+  from { background-position: 140% 0; }
+  to { background-position: -40% 0; }
+}
+
+/* ── 空态 ────────────────────────────────────────── */
+.disc-empty {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, .03);
+  border: .5px solid var(--line-2);
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.disc-empty button {
+  margin-left: auto;
+  min-height: 34px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+/* ── 详情浮层 ────────────────────────────────────── */
+.disc-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(20, 20, 22, .34);
+  backdrop-filter: blur(10px) saturate(160%);
+  -webkit-backdrop-filter: blur(10px) saturate(160%);
+  animation: disc-fade .22s var(--ease-out);
+}
+
+@keyframes disc-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.disc-sheet {
+  width: min(520px, 100%);
+  max-height: min(86vh, 720px);
+  overflow: auto;
+  border-radius: 22px;
+  background: var(--paper);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, .3), inset 0 1px 0 rgba(255, 255, 255, .9);
+  animation: disc-rise .3s var(--ease-out);
+}
+
+@keyframes disc-rise {
+  from { opacity: 0; transform: translateY(14px) scale(.985); }
+  to { opacity: 1; transform: none; }
+}
+
+.disc-sheet-hero {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  background: #E7E7EA;
+  overflow: hidden;
+}
+
+.disc-sheet-hero img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.disc-sheet-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, .06) 0%, rgba(0, 0, 0, 0) 38%, rgba(0, 0, 0, .78) 100%);
+}
+
+.disc-sheet-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .82);
+  color: var(--ink);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  cursor: pointer;
+}
+
+.disc-sheet-head {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 14px;
+}
+
+.disc-sheet-head h3 {
+  margin: 0 0 5px;
+  font: 600 20px/1.3 var(--font-display);
+  letter-spacing: -.02em;
+  color: #fff;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, .5);
+}
+
+.disc-sheet-head p {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin: 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, .82);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, .5);
+}
+
+.disc-sheet-body {
+  padding: 18px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.disc-sheet-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--ink-2);
+}
+
+.disc-sheet-row-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  background: rgba(10, 132, 255, .1);
+  color: var(--accent);
+}
+
+.disc-sheet-foot {
+  margin-top: 6px;
+  padding-top: 16px;
+  border-top: .5px solid var(--line-2);
+}
+
+.disc-sheet-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 46px;
+  border: 0;
+  border-radius: 13px;
+  background: var(--accent);
+  color: #fff;
+  font: 500 14px/1 var(--font-body);
+  cursor: pointer;
+  transition: transform .2s var(--ease-out), box-shadow .3s var(--ease-out);
+}
+
+.disc-sheet-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px -10px rgba(10, 132, 255, .7);
+}
+
+.disc-sheet-foot p {
+  margin: 10px 0 0;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--ink-3);
+  text-align: center;
+}
+
+/* ── 断点 ────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .disc-grid { gap: 16px; }
+  .disc-card-body strong { font-size: 13.5px; }
+}
+
+@media (max-width: 620px) {
+  .disc-page { padding: 0 16px 130px; }
+  .disc-head { padding: 30px 0 18px; }
+  .disc-grid { gap: 10px; }
+  .disc-card { border-radius: 11px; }
+  .disc-card-body { left: 8px; right: 8px; bottom: 7px; gap: 2px; }
+  .disc-card-body strong { font-size: 11.5px; }
+  .disc-card-meta { font-size: 10px; }
+  .disc-backdrop { padding: 0; align-items: flex-end; }
+  .disc-sheet { border-radius: 20px 20px 0 0; max-height: 88vh; }
+}

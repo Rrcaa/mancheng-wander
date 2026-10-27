@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: wander
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python run.py
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: AMAP_API_KEY
+        value: ""
+      - key: AMAP_JS_KEY
+        value: ""
+      - key: AMAP_JS_SECURITY_CODE
+        value: ""
+      - key: DEEPSEEK_API_KEY
+        value: ""
+      - key: JWT_SECRET
+        generateValue: true

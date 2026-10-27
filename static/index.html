@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="liquid">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>漫程 · AI 旅行规划</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/brand/wander.svg?v=20261026-v80" />
+  <link rel="apple-touch-icon" href="/assets/brand/wander.svg?v=20261026-v80" />
+  <link rel="stylesheet" href="/style.css?v=20261026-v80" />
+  <link rel="stylesheet" href="/theme-liquid.css?v=20261026-v80" />
+  <link rel="stylesheet" href="/layout.css?v=20261026-v80" />
+  <link rel="stylesheet" href="/discover.css?v=20261026-v80" />
+  <link rel="stylesheet" href="/detail-layout.css?v=20261026-v80" />
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React 18 + Babel Standalone（本地 vendor，避免外网 CDN 延迟） -->
+  <script src="/vendor/react.development.js"></script>
+  <script src="/vendor/react-dom.development.js"></script>
+  <script src="/vendor/babel.min.js"></script>
+
+  <!-- SortableJS（行程手动编辑拖拽） -->
+  <script src="/vendor/sortable.min.js"></script>
+  <!-- 首次规划引导：仅用于编排工作区的入场动效 -->
+  <script src="/vendor/gsap.min.js"></script>
+  <!-- 液态玻璃跟随高光 -->
+  <script src="/glass.js?v=20261026-v80"></script>
+
+  <!-- API 客户端（纯 JS，无 JSX） -->
+  <script src="/api.js?v=20261026-v80"></script>
+  <script src="/chat-state.js?v=20261026-v80"></script>
+  <script src="/navigation-state.js?v=20261026-v80"></script>
+
+  <!-- JSX 组件（Babel 在浏览器端转译） -->
+  <script type="text/babel" src="/brand.jsx?v=20261026-v80"></script>
+  <script type="text/babel" src="/components.jsx?v=20261026-v80"></script>
+  <script type="text/babel" src="/edit.jsx?v=20261026-v80"></script>
+  <script type="text/babel" src="/pages.jsx?v=20261026-v80"></script>
+  <script type="text/babel" src="/discover-page.jsx?v=20261026-v80"></script>
+  <script type="text/babel" src="/detail-redesign.jsx?v=20261026-v80"></script>
+  <script type="text/babel" src="/main.jsx?v=20261026-v80"></script>
+</body>
+</html>

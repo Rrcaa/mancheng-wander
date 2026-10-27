@@ -1,0 +1,72 @@
+"""PlanningBrief 就绪规则。
+
+判定条件集中在本文：必要条件是
+目的地 + 开始日期 + 结束日期 + **旅行侧重点（trip_focus）**。
+最后一个字段决定了「会不会跟用户多聊一句」，不能省。
+"""
+from __future__ import annotations
+
+from datetime import date
+from typing import Any
+
+
+def _iso_date(value: Any) -> date | None:
+    try:
+        return date.fromisoformat(str(value or "").strip())
+    except ValueError:
+        return None
+
+
+def required_brief_fields(data: dict[str, Any]) -> list[str]:
+    """Return missing or invalid fields required before formal planning."""
+    missing: list[str] = []
+    if not str(data.get("destination") or "").strip():
+        missing.append("destination")
+
+    start = _iso_date(data.get("start_date"))
+    end = _iso_date(data.get("end_date"))
+    if start is None:
+        missing.append("start_date")
+    if end is None:
+        missing.append("end_date")
+    if start is not None and end is not None and end < start:
+        missing.append("date_range")
+    if data.get("trip_focus") not in {"sights_first", "food_first", "balanced"}:
+        missing.append("trip_focus")
+    return missing
+
+
+_FIELD_LABELS = {
+    "destination": "目的地",
+    "start_date": "开始日期",
+    "end_date": "结束日期或游玩天数",
+    "date_range": "有效日期范围",
+    "trip_focus": "旅行侧重点",
+}
+
+
+def required_input_interrupt(missing_fields: list[str]) -> dict[str, Any]:
+    """Build the stable public interrupt contract for the main agent."""
+    missing = list(dict.fromkeys(missing_fields))
+    if missing == ["trip_focus"]:
+        return {
+            "question": "这趟更想景点为主、吃吃喝喝为主，还是两者均衡？",
+            "missing_fields": missing,
+            "input_schema": {
+                "type": "string",
+                "enum": ["景点为主", "吃吃喝喝为主", "均衡安排"],
+            },
+        }
+    labels = "、".join(_FIELD_LABELS.get(item, item) for item in missing)
+    return {
+        "question": f"为了继续规划，还需要补充：{labels}。",
+        "missing_fields": missing,
+        "input_schema": {"type": "string", "minLength": 1},
+    }
+
+
+TRIP_FOCUS_LABELS = {
+    "sights_first": "景点为主",
+    "food_first": "吃吃喝喝为主",
+    "balanced": "均衡安排",
+}

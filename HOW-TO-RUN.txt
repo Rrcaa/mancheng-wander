@@ -1,0 +1,66 @@
+漫程 Wander · 直接运行版
+========================
+
+【最快的方式】
+
+  Mac：双击 Start.command
+  Windows：双击 Start.bat
+
+首次运行会自动安装依赖（约 2-5 分钟，只需一次），
+装完浏览器会自动打开 http://localhost:8765
+
+关闭那个黑色窗口 = 停止服务。
+
+
+【如果双击没反应】
+
+Mac 上如果提示"无法打开，因为来自身份不明的开发者"：
+
+  1. 右键点击 Start.command → 打开 → 再点"打开"
+  2. 或者打开终端，执行：
+     cd 这个文件夹的路径
+     chmod +x Start.command
+     ./Start.command
+
+
+【手动运行（任何系统）】
+
+  python3 -m venv .venv
+  source .venv/bin/activate        # Windows: .venv\Scripts\activate
+  pip install -r requirements.txt
+  python run.py
+
+
+【配置说明】
+
+  .env 里已经填好了高德地图和 DeepSeek 的 Key，开箱即用，不用改。
+
+  ⚠️ 重要：这个文件里是你的私人 API Key，任何人拿到都能消耗你的额度。
+     不要上传到 GitHub、不要发给别人、不要放在公开网盘。
+
+  如果不小心泄露了，立刻去这两个地方重置：
+  - 高德：https://console.amap.com/dev/key/app
+  - DeepSeek：https://platform.deepseek.com/api_keys
+
+
+【需要什么环境】
+
+  Python 3.9 或更高版本。
+  Mac 自带，Windows 需要自己装（https://www.python.org/downloads/，
+  安装时勾选 "Add Python to PATH"）。
+
+  首次运行要联网下载依赖，之后离线也能用
+  （但行程规划仍然需要联网调用 AI 和地图接口）。
+
+
+【常见问题】
+
+  Q: 端口 8765 被占用怎么办？
+  A: 打开 .env，加一行 PORT=8766，改用 http://localhost:8766
+
+  Q: 页面打开了但搜不到景点？
+  A: 检查 .env 里的 AMAP_API_KEY 是否还有效、额度是否用完
+
+  Q: 生成的行程很久没反应？
+  A: 一次完整规划要调多次 AI 和地图接口，正常需要 30-90 秒，
+     不要重复点击

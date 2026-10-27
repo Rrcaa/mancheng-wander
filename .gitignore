@@ -1,0 +1,39 @@
+# ── 依赖与虚拟环境 ──────────────────────────
+.venv/
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+
+# ── 本地配置与密钥（绝不提交）────────────────
+.env
+.env.local
+.env.*.local
+
+# ── 运行时数据：账号、行程、POI 缓存 ─────────
+data/
+*.db
+*.sqlite3
+
+# ── 早期的 Vite 原型（已被 static/ 的无构建版本取代）──
+web/
+
+# ── 开发产物：截图、设计稿、验证报告 ─────────
+preview/*
+!preview/*.mjs
+!preview/*.py
+
+# ── 其他 ──────────────────────────────────
+*.log
+.idea/
+.vscode/
+
+# ── 不随代码发布 ────────────────────────────
+# 仓库只放代码，项目介绍与配图留在本地
+README.md
+docs/
+
+# 个人材料，不随产品发布
+docs/面试讲解话术.md
+preview/push_via_api.py

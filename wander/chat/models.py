@@ -1,0 +1,120 @@
+"""结构化契约：对话理解层与主 Agent 的边界。
+
+字段语义统一在一处，避免多处漂移：
+`PlanningBriefPatch` 里的 trip_constraints 是列表而不是几个扁平字符串，
+`DialogueDecision` 是唯一能影响业务动作的模型输出。
+"""
+from __future__ import annotations
+
+from typing import Any, Literal
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+
+class _StrictModel(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+
+class TripConstraintPatch(_StrictModel):
+    id: str | None = None
+    category: Literal[
+        "attraction_preference", "food_preference", "dietary_requirement",
+        "travel_pace", "budget_style", "transport_preference",
+        "accommodation_preference", "schedule_preference", "companion_context",
+        "accessibility_need", "other_travel_preference",
+    ]
+    value_text: str = Field(min_length=1, max_length=500)
+    polarity: Literal["prefer", "avoid", "require", "fact"] = "fact"
+    evidence_sequences: list[int] | None = Field(default=None, max_length=20)
+
+
+class PlanningBriefPatch(_StrictModel):
+    destination: str | None = None
+    start_date: str | None = None
+    end_date: str | None = None
+    days: int | None = Field(default=None, ge=1, le=30)
+    trip_focus: Literal["sights_first", "food_first", "balanced"] | None = None
+    budget: str | None = None
+    trip_budget: str | None = None
+    companions: str | None = None
+    attraction_preference: str | None = None
+    food_preference: str | None = None
+    habit_preference: str | None = None
+    trip_constraints: list[TripConstraintPatch] | None = Field(default=None, max_length=30)
+    remove_trip_constraint_ids: list[str] | None = Field(default=None, max_length=30)
+    excluded_memory_fact_ids: list[str] | None = Field(default=None, max_length=100)
+    restored_memory_fact_ids: list[str] | None = Field(default=None, max_length=100)
+
+    @field_validator(
+        "destination", "start_date", "end_date", "budget", "trip_budget",
+        "companions", "attraction_preference", "food_preference",
+        "habit_preference",
+        mode="before",
+    )
+    @classmethod
+    def strip_text(cls, value: object) -> object:
+        return value.strip() if isinstance(value, str) else value
+
+
+class DialogueTarget(_StrictModel):
+    run_id: str | None = None
+    itinerary_id: str | None = None
+
+
+class DialogueClarification(_StrictModel):
+    field: str = Field(min_length=1, max_length=80)
+    question: str = Field(min_length=1, max_length=500)
+    options: list[str] = Field(default_factory=list, max_length=8)
+
+
+class DialogueDecision(_StrictModel):
+    """The only model output that can influence chat business actions."""
+
+    intent: Literal[
+        "travel_qa", "general_chat", "create_plan", "update_brief",
+        "confirm_plan", "modify_itinerary", "run_control", "unclear",
+    ]
+    reply: str = Field(min_length=1, max_length=2_000)
+    brief_patch: PlanningBriefPatch = Field(default_factory=PlanningBriefPatch)
+    target: DialogueTarget = Field(default_factory=DialogueTarget)
+    run_action: Literal["none", "cancel", "retry"] = "none"
+    modification_notes: str | None = Field(default=None, max_length=2_000)
+    clarification: DialogueClarification | None = None
+    requires_confirmation: bool = False
+
+    @field_validator("reply", "modification_notes", mode="before")
+    @classmethod
+    def normalize_reply_text(cls, value: object) -> object:
+        return value.strip() if isinstance(value, str) else value
+
+
+class DialogueUnderstandingError(RuntimeError):
+    """Safe failure surfaced by the scheduler without exposing model internals."""
+
+    public_code = "dialogue_understanding_failed"
+    public_message = "这条消息暂时没有理解成功，请重试"
+
+    def __init__(self, message: str | None = None, *, code: str | None = None):
+        super().__init__(message or self.public_message)
+        if message:
+            self.public_message = message
+        if code:
+            self.public_code = code
+
+
+class MainAgentContext(_StrictModel):
+    """Server-injected scope for tools; never part of a tool's public schema."""
+
+    user_id: str
+    conversation_id: str
+    chat_run_id: str
+    memory_revision: int = Field(ge=0)
+    current_message: str
+    related_run_id: str | None = None
+    related_itinerary_id: str | None = None
+
+
+class AgentToolResult(_StrictModel):
+    ok: bool
+    code: str = "ok"
+    message: str = ""
+    data: dict[str, Any] = Field(default_factory=dict)
